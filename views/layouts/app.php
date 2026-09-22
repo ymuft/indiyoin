@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= htmlspecialchars($pageTitle ?? 'Indiyoin', ENT_QUOTES, 'UTF-8') ?></title>
     <link rel="stylesheet" href="/assets/app.css">
+    <link rel="stylesheet" href="/assets/dashboard-v2.css">
 </head>
 <body>
 <div class="app-shell">

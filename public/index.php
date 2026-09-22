@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use App\Core\ConfigValidator;
+use App\Core\Bootstrap;
 use App\Core\Env;
+use App\Core\Paths;
 use App\Core\Router;
-use App\Security\SecurityHeaders;
 use Indiyoin\Application\AnalysisSummaryBuilder;
 use Indiyoin\Application\CapacityCalculator;
 use Indiyoin\Application\GenerateCapacityAnalysis;
@@ -19,27 +19,11 @@ use Indiyoin\Web\Controllers\PpvImportController;
 require dirname(__DIR__) . '/vendor/autoload.php';
 
 $root = dirname(__DIR__);
-Env::load($root . '/.env');
-ConfigValidator::assertSafe();
-SecurityHeaders::apply();
+Bootstrap::web($root);
 
-ini_set('session.use_strict_mode', '1');
-ini_set('session.use_only_cookies', '1');
-ini_set('session.use_trans_sid', '0');
-session_name(Env::get('APP_SESSION_NAME', 'indiyoin_session') ?? 'indiyoin_session');
-session_set_cookie_params([
-    'lifetime' => 0,
-    'path' => '/',
-    'secure' => Env::bool('APP_SECURE_COOKIES', false),
-    'httponly' => true,
-    'samesite' => 'Lax',
-]);
-session_start();
-
-$catalogPath = Env::get('TECHNICAL_CATALOG_PATH', $root . '/data/technical-parameters.csv') ?? $root . '/data/technical-parameters.csv';
-if (!str_starts_with($catalogPath, '/') && preg_match('/^[A-Za-z]:[\\\\\/]/', $catalogPath) !== 1) {
-    $catalogPath = $root . '/' . ltrim($catalogPath, '/\\');
-}
+$catalogPath = Paths::resolve(
+    Env::get('TECHNICAL_CATALOG_PATH', 'data/technical-parameters.csv') ?? 'data/technical-parameters.csv'
+);
 $sheetName = Env::get('PPV_SHEET_NAME', 'PPV') ?? 'PPV';
 $maxUploadMb = (int) (Env::get('MAX_UPLOAD_MB', '30') ?? '30');
 
@@ -50,12 +34,12 @@ $analysisService = new GenerateCapacityAnalysis(
 );
 
 $auth = new AuthController();
-$dashboard = new DashboardController($root . '/storage/analysis');
+$dashboard = new DashboardController(Paths::resolve('storage/analysis'));
 $import = new PpvImportController(
     $analysisService,
     new AnalysisSummaryBuilder(),
-    $root . '/storage/imports',
-    $root . '/storage/analysis',
+    Paths::resolve('storage/imports'),
+    Paths::resolve('storage/analysis'),
     $maxUploadMb,
 );
 $health = new HealthController();

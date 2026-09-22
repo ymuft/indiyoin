@@ -1,5 +1,7 @@
 # Roadmap
 
+> O roadmap abaixo pertence exclusivamente ao **Indiyoin**. Nenhuma fase pressupõe encaminhar trabalho para outro repositório.
+
 ## Fase 1 — Base técnica
 
 - [x] Domínio de demanda, parâmetro técnico e capacidade.
@@ -61,16 +63,21 @@ PPVs reais não devem ser versionados no repositório.
 - [x] Integrar `Bootstrap`/`Paths` portáveis do AppFoundry.
 - [ ] Manter CI verde após mudanças funcionais relevantes.
 
-## Fase 6 — Integração futura com Capacity
+## Fase 6 — Consolidação do Indiyoin
 
-- [ ] Congelar contratos do núcleo.
-- [ ] Comparar resultados contra YOUIN/Capacity.
-- [ ] Validar catálogo/routing em cenários reais.
-- [ ] Levar o núcleo validado para o Capacity.
+- [ ] Tornar o catálogo técnico persistente e auditável.
+- [ ] Manter histórico/versionamento de parâmetros técnicos.
+- [ ] Criar aliases e identidade técnica administráveis pela interface.
+- [ ] Criar routing versionado por produto/linha quando necessário.
+- [ ] Implementar movimentação de modelos entre linhas como cenário, sem alterar a base técnica silenciosamente.
+- [ ] Criar comparativo entre cenário base e cenários simulados.
+- [ ] Criar rastreabilidade completa: demanda → identidade → routing → CT/OEE → cálculo.
+- [ ] Criar exportação/relatório dos resultados e pendências.
+- [ ] Ampliar cobertura de testes com diferentes formatos de PPV.
 
-## Critério para avançar da validação para integração
+## Critério de maturidade do Indiyoin
 
-Antes de incorporar o núcleo ao Capacity, o Indiyoin deve provar:
+O Indiyoin deve ser considerado maduro quando provar:
 
 1. leitura robusta de PPVs com estruturas reais diferentes;
 2. demanda canônica conferível;
@@ -78,5 +85,8 @@ Antes de incorporar o núcleo ao Capacity, o Indiyoin deve provar:
 4. cálculo reproduzível;
 5. cobertura técnica explícita;
 6. testes automatizados;
-7. catálogo técnico administrável/auditável;
-8. resultados comparáveis ao processo de referência.
+7. catálogo técnico administrável e auditável;
+8. movimentação/cenários com provenance claro;
+9. rastreabilidade suficiente para explicar cada número do dashboard.
+
+Comparações com ferramentas ou projetos externos podem ser usadas como validação quando solicitadas, mas **não fazem parte do fluxo normal de desenvolvimento e não mudam o repositório alvo: Indiyoin**.

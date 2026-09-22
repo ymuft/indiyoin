@@ -20,9 +20,13 @@ final class Database
         $driver = Env::get('DB_DRIVER', 'sqlite');
 
         if ($driver === 'sqlite') {
-            $database = Env::get('DB_DATABASE', dirname(__DIR__, 3) . '/storage/app.sqlite');
+            $projectRoot = dirname(__DIR__, 3);
+            $database = Env::get('DB_DATABASE', $projectRoot . '/storage/app.sqlite');
             if ($database === null || trim($database) === '') {
                 throw new RuntimeException('DB_DATABASE is required for SQLite.');
+            }
+            if (!self::isAbsolutePath($database)) {
+                $database = $projectRoot . '/' . ltrim($database, '/\\');
             }
             $directory = dirname($database);
             if (!is_dir($directory) && !mkdir($directory, 0775, true) && !is_dir($directory)) {
@@ -54,5 +58,10 @@ final class Database
         }
 
         return self::$connection;
+    }
+
+    private static function isAbsolutePath(string $path): bool
+    {
+        return str_starts_with($path, '/') || preg_match('/^[A-Za-z]:[\\\\\/]/', $path) === 1;
     }
 }

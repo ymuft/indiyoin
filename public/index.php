@@ -37,6 +37,9 @@ session_set_cookie_params([
 session_start();
 
 $catalogPath = Env::get('TECHNICAL_CATALOG_PATH', $root . '/data/technical-parameters.csv') ?? $root . '/data/technical-parameters.csv';
+if (!str_starts_with($catalogPath, '/') && preg_match('/^[A-Za-z]:[\\\\\/]/', $catalogPath) !== 1) {
+    $catalogPath = $root . '/' . ltrim($catalogPath, '/\\');
+}
 $sheetName = Env::get('PPV_SHEET_NAME', 'PPV') ?? 'PPV';
 $maxUploadMb = (int) (Env::get('MAX_UPLOAD_MB', '30') ?? '30');
 

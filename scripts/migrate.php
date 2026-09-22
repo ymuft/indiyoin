@@ -2,17 +2,24 @@
 
 declare(strict_types=1);
 
+use App\Core\Bootstrap;
 use App\Core\Database;
 use App\Core\Env;
+use App\Core\Paths;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
-$root = dirname(__DIR__);
-Env::load($root . '/.env');
-$driver = Env::get('DB_DRIVER', 'sqlite') ?? 'sqlite';
-$file = $root . '/migrations/' . ($driver === 'mysql' ? '001_init.mysql.sql' : '001_init.sql');
+Bootstrap::console(dirname(__DIR__));
+
+$driver = Env::get('DB_DRIVER', 'sqlite');
+$file = $driver === 'mysql'
+    ? Paths::resolve('migrations/001_init.mysql.sql')
+    : Paths::resolve('migrations/001_init.sql');
+
 $sql = file_get_contents($file);
 if ($sql === false) {
-    throw new RuntimeException('Migration file not found.');
+    fwrite(STDERR, "Unable to read migration file.\n");
+    exit(1);
 }
+
 Database::connection()->exec($sql);
-fwrite(STDOUT, "Migration applied ({$driver}).\n");
+fwrite(STDOUT, "Migration complete.\n");

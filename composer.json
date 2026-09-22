@@ -1,0 +1,30 @@
+{
+  "name": "ymuft/indiyoin",
+  "description": "Motor independente para transformar demanda de PPV em necessidade de capacidade usando catalogo tecnico CT/OEE.",
+  "type": "project",
+  "license": "proprietary",
+  "require": {
+    "php": "^8.3",
+    "phpoffice/phpspreadsheet": "^3.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^11.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Indiyoin\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Indiyoin\\Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "test": "phpunit",
+    "lint": "find src tests public bin -name '*.php' -print0 | xargs -0 -n1 php -l"
+  },
+  "config": {
+    "sort-packages": true
+  }
+}

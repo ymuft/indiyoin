@@ -1,0 +1,16 @@
+/vendor/
+/.idea/
+/.vscode/
+/.env
+*.log
+
+# PPVs podem conter dados operacionais e nao devem ser versionados.
+/storage/imports/*
+!/storage/imports/.gitkeep
+/storage/analysis/*
+!/storage/analysis/.gitkeep
+
+# Arquivos locais de entrada/saida.
+*.xlsx
+*.xls
+*.xlsm

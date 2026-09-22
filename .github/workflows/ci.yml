@@ -17,12 +17,19 @@ jobs:
           extensions: pdo_sqlite, mbstring, zip, gd, dom, simplexml, xml, xmlreader, xmlwriter
           coverage: none
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
       - run: composer validate --strict
       - run: composer install --no-interaction --prefer-dist
       - run: composer lint
       - run: composer test
 
-      - name: AppFoundry integration smoke test
+      - name: Frontend syntax
+        run: node --check public/assets/dashboard.js
+
+      - name: AppFoundry + PPV end-to-end smoke test
         shell: bash
         run: |
           cp .env.example .env
@@ -30,6 +37,7 @@ jobs:
           echo "DB_DATABASE=${RUNNER_TEMP}/indiyoin.sqlite" >> .env
           php scripts/migrate.php
           php scripts/create-admin.php --name="CI Admin" --email="ci@example.com" --password="capacity-test-123"
+          php scripts/create-demo-ppv.php "${RUNNER_TEMP}/demo.xlsx"
 
           php -S 127.0.0.1:8080 -t public public/index.php >"${RUNNER_TEMP}/indiyoin-server.log" 2>&1 &
           SERVER_PID=$!
@@ -48,4 +56,22 @@ jobs:
             --data-urlencode "password=capacity-test-123")
           test "$STATUS" = "302"
 
-          curl -fsS -b "${RUNNER_TEMP}/cookies.txt" http://127.0.0.1:8080/ | grep -q 'Importar PPV'
+          curl -fsS -b "${RUNNER_TEMP}/cookies.txt" http://127.0.0.1:8080/ > "${RUNNER_TEMP}/dashboard.html"
+          grep -q 'Importar PPV' "${RUNNER_TEMP}/dashboard.html"
+          DASH_CSRF=$(grep -oP 'name="_csrf" value="\K[^"]+' "${RUNNER_TEMP}/dashboard.html" | head -1)
+          test -n "$DASH_CSRF"
+
+          STATUS=$(curl -sS -o /dev/null -w '%{http_code}' -b "${RUNNER_TEMP}/cookies.txt" -c "${RUNNER_TEMP}/cookies.txt" \
+            -X POST http://127.0.0.1:8080/import \
+            -F "_csrf=${DASH_CSRF}" \
+            -F "ppv=@${RUNNER_TEMP}/demo.xlsx;type=application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+          test "$STATUS" = "302"
+
+          curl -fsS -b "${RUNNER_TEMP}/cookies.txt" http://127.0.0.1:8080/ > "${RUNNER_TEMP}/analysis.html"
+          grep -q 'Visão de capacidade' "${RUNNER_TEMP}/analysis.html"
+          grep -q 'THB 5.0' "${RUNNER_TEMP}/analysis.html"
+          grep -q 'K62H' "${RUNNER_TEMP}/analysis.html"
+          grep -q 'COMPOSIÇÃO DA CARGA' "${RUNNER_TEMP}/analysis.html"
+
+      - name: Build Docker image
+        run: docker build -t indiyoin-ci .

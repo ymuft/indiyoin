@@ -9,8 +9,8 @@ RUN apt-get update \
     && printf '%s\n' 'expose_php=Off' 'display_errors=Off' 'log_errors=On' 'upload_max_filesize=32M' 'post_max_size=34M' > "$PHP_INI_DIR/conf.d/indiyoin.ini"
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
-COPY composer.json ./
-RUN composer install --no-dev --no-interaction --no-progress --no-autoloader
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --no-interaction --no-progress --prefer-dist --no-autoloader
 COPY . .
 RUN composer dump-autoload --no-dev --optimize \
     && mkdir -p storage/imports storage/analysis \

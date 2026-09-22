@@ -23,6 +23,15 @@ jobs:
 
       - run: composer validate --strict
       - run: composer install --no-interaction --prefer-dist
+
+      - name: Capture Composer lockfile
+        uses: actions/upload-artifact@v4
+        with:
+          name: composer-lock
+          path: composer.lock
+          if-no-files-found: error
+          retention-days: 1
+
       - run: composer lint
       - run: composer test
 

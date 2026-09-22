@@ -21,6 +21,20 @@ PPV.xlsx
   -> resumo/dashboard
 ```
 
+### 1.1 Isolamento do repositório — regra obrigatória
+
+Este projeto é **standalone**.
+
+- O repositório de trabalho é `ymuft/indiyoin`.
+- Toda implementação solicitada neste contexto deve ser feita no Indiyoin.
+- Não encaminhar tarefas para outro repositório.
+- Não trocar o diretório de trabalho para `capacity`, `capacity-planning` ou projeto semelhante.
+- Não copiar, portar, cherry-pickar ou publicar alterações em outro projeto sem uma solicitação explícita do usuário na tarefa atual.
+- O projeto **Capacity Planning não é dependência, destino automático nem próxima etapa implícita do Indiyoin**.
+- Referências a `capacity`, `CapacityCalculator`, `capacity engine` ou "capacidade" dentro deste repositório significam o **domínio de cálculo de capacidade do próprio Indiyoin**, não outro sistema.
+
+Outro projeto pode ser usado como referência comparativa somente quando o usuário pedir explicitamente. Mesmo nesse caso, não modificar o outro repositório sem autorização explícita.
+
 ## 2. Regras de domínio inegociáveis
 
 ### 2.1 PPV não é o motor técnico
@@ -158,6 +172,7 @@ Mudanças no parser do PPV devem incluir teste cobrindo a nova estrutura encontr
 Uma mudança só está pronta quando:
 
 - preserva as regras de domínio acima;
+- permanece dentro do repositório Indiyoin salvo instrução explícita em contrário;
 - não reduz `MATCHED/AMBIGUOUS/UNRESOLVED` a uma escolha silenciosa;
 - possui teste para comportamento novo ou correção relevante;
 - `composer lint` passa;
@@ -172,6 +187,7 @@ Uma mudança só está pronta quando:
 - Não reescrever histórico sem solicitação explícita.
 - Não apagar alterações do usuário para simplificar uma tarefa.
 - Não versionar credenciais, senhas, tokens, PPVs reais ou bancos locais.
+- Não publicar alterações em outro repositório como efeito colateral de uma tarefa do Indiyoin.
 - `composer.lock` deve permanecer versionado para builds reproduzíveis.
 
 ## 9. Prioridade funcional atual

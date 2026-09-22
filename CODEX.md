@@ -2,6 +2,19 @@
 
 Este é o ponto de entrada rápido para o Codex neste repositório.
 
+## Escopo obrigatório
+
+Você está trabalhando no **Indiyoin**.
+
+- Repositório alvo: `ymuft/indiyoin`.
+- Faça as alterações solicitadas neste repositório.
+- Não encaminhe tarefas para Capacity Planning ou qualquer outro projeto.
+- Não troque o diretório de trabalho para outro repositório.
+- Não porte ou publique alterações em outro repositório sem solicitação explícita do usuário na tarefa atual.
+- Neste projeto, `capacity`, `CapacityCalculator`, `capacity engine` e "capacidade" referem-se ao domínio de cálculo do **próprio Indiyoin**, não a outro sistema.
+
+Se outro projeto for citado em documentação histórica, trate-o apenas como contexto/referência até que o usuário peça explicitamente uma integração.
+
 ## Antes de qualquer alteração
 
 Leia integralmente, nesta ordem:
@@ -12,7 +25,7 @@ Leia integralmente, nesta ordem:
 4. `docs/PPV-MAPPING.md` — contrato de leitura do PPV.
 5. `docs/REQUIREMENTS.md` — requisitos do ambiente.
 6. `docs/INSTALL.md` — instalação e execução.
-7. `docs/ROADMAP.md` — estado atual e prioridades.
+7. `docs/ROADMAP.md` — estado atual e prioridades do Indiyoin.
 
 Se a tarefa tocar autenticação, bootstrap, sessão, banco, CSRF, CSP ou infraestrutura web, leia também `docs/APPFOUNDRY.md`.
 
@@ -30,6 +43,7 @@ Não quebre essa separação.
 - Não esconder demanda sem cobertura técnica.
 - Não commitir PPVs reais, `.env`, credenciais, SQLite local ou conteúdo de `storage/`.
 - Não usar `git push --force` nem reescrever histórico sem solicitação explícita.
+- Não sair do Indiyoin para implementar a tarefa em outro repositório.
 
 ## Fluxo funcional esperado
 
@@ -39,7 +53,7 @@ PPV.xlsx
   -> demanda canônica
   -> resolução Linha + Modelo / identidade técnica
   -> catálogo CT/OEE
-  -> CapacityCalculator
+  -> CapacityCalculator do Indiyoin
   -> AnalysisSummaryBuilder
   -> dashboard
 ```
@@ -85,7 +99,7 @@ Já existem:
 
 ## Prioridade atual
 
-A próxima frente é **Parâmetros Técnicos**:
+A próxima frente é **Parâmetros Técnicos** dentro do Indiyoin:
 
 1. visualizar catálogo técnico;
 2. editar CT/OEE de forma auditável;
@@ -94,18 +108,19 @@ A próxima frente é **Parâmetros Técnicos**:
 5. criar aliases validados;
 6. evoluir para routing/identidade técnica quando `linha + modelo` não for suficiente.
 
-Depois vêm movimentação de modelos e cenários.
+Depois vêm movimentação de modelos e cenários, também no Indiyoin.
 
 ## Forma de trabalhar
 
 Antes de implementar:
 
-1. inspecione o código existente;
-2. identifique os componentes afetados;
-3. preserve as fronteiras arquiteturais;
-4. faça a menor mudança coerente que resolva o problema;
-5. adicione/ajuste testes;
-6. execute a validação;
-7. ao finalizar, reporte arquivos alterados, comportamento, testes e pendências.
+1. confirme que o diretório/repositório atual é o Indiyoin;
+2. inspecione o código existente;
+3. identifique os componentes afetados;
+4. preserve as fronteiras arquiteturais;
+5. faça a menor mudança coerente que resolva o problema;
+6. adicione/ajuste testes;
+7. execute a validação;
+8. ao finalizar, reporte arquivos alterados, comportamento, testes e pendências.
 
 Se houver conflito entre este arquivo e `AGENTS.md`, **`AGENTS.md` prevalece**.

@@ -1,21 +1,21 @@
 # Indiyoin
 
-Protótipo independente para validar o fluxo **PPV → demanda produtiva → CT/OEE → necessidade de capacidade** antes de incorporar a abordagem ao Capacity.
+Motor independente para transformar **demanda produtiva do PPV** em **necessidade de capacidade**, usando um catálogo técnico separado para CT/OEE.
 
-## Princípio
+> **PPV informa demanda. Catálogo técnico informa como fabricar. O motor calcula capacidade.**
 
-O PPV é tratado como **fonte de demanda**, não como motor de capacidade. CT e OEE pertencem ao catálogo técnico.
+## Fluxo
 
 ```text
 PPV.xlsx
    ↓
-leitor estrutural
+detecção estrutural sem coordenadas fixas
    ↓
-demanda por linha/modelo/mês
+demanda canônica por linha/modelo/período
    ↓
-catálogo técnico CSV
+catálogo técnico CT/OEE
    ↓
-CT + OEE
+resolução MATCHED / AMBIGUOUS / UNRESOLVED
    ↓
 capacity engine
    ↓
@@ -24,51 +24,35 @@ horas/mês + horas/dia
 dashboard
 ```
 
-## Fórmula inicial
+## Para Codex / agentes de código
 
-```text
-horas_mes = demanda * CT / (3600 * OEE)
-horas_dia = horas_mes / dias_produtivos
-```
+Leia **`AGENTS.md` antes de alterar o projeto**.
 
-## Interface atual
+Ele contém:
 
-A primeira interface já cobre:
+- regras de domínio que não podem ser quebradas;
+- fronteiras arquiteturais;
+- comandos de instalação e validação;
+- critérios de pronto;
+- regras de segurança de Git/dados;
+- prioridade funcional atual.
 
-- login protegido;
-- upload de PPV `.xlsx`;
-- detecção semântica de `LINHA`, `MODELO`, `PROD.`, meses e dias produtivos;
-- resolução CT/OEE pelo CSV técnico;
-- contagem de `MATCHED`, `AMBIGUOUS` e `UNRESOLVED`;
-- filtro por linha;
-- gráfico mensal em horas/dia;
-- referências de 1, 2 e 3 turnos;
-- tabela mensal da linha;
-- lista de pendências técnicas.
+Depois consulte:
 
-## AppFoundry
+- `docs/ARCHITECTURE.md`
+- `docs/PPV-MAPPING.md`
+- `docs/REQUIREMENTS.md`
+- `docs/INSTALL.md`
+- `docs/ROADMAP.md`
+- `docs/APPFOUNDRY.md` quando a tarefa envolver a fundação web
 
-O projeto usa componentes do `ymuft/appfoundry` para autenticação, sessão, CSRF, rate limit, auditoria, banco, router, CSP e configuração segura. A integração fica isolada em `src/AppFoundry/`, enquanto a regra do Indiyoin permanece no namespace `Indiyoin\\`.
-
-Veja `docs/APPFOUNDRY.md`.
-
-## Stack
-
-- PHP 8.3+
-- PhpSpreadsheet
-- SQLite por padrão; MySQL suportado pela fundação AppFoundry
-- HTML/CSS/JavaScript local, sem CDN
-- PHPUnit
-- Docker/Apache
-
-## Catálogo técnico inicial
-
-`data/technical-parameters.csv` contém o mapeamento parcial extraído do PPV histórico. Conflitos são preservados como `AMBIGUOUS`; o sistema não escolhe CT/OEE arbitrariamente.
-
-## Subir localmente com Docker
+## Quick start — Docker
 
 ```bash
+git clone https://github.com/ymuft/indiyoin.git
+cd indiyoin
 cp .env.example .env
+
 docker compose build
 docker compose run --rm app php scripts/migrate.php
 docker compose run --rm app php scripts/create-admin.php \
@@ -77,11 +61,23 @@ docker compose run --rm app php scripts/create-admin.php \
 docker compose up -d
 ```
 
-Abra `http://localhost:8080`.
+Abra:
+
+```text
+http://localhost:8080
+```
+
+Health check:
+
+```bash
+curl -fsS http://localhost:8080/health
+```
+
+Guia completo: `docs/INSTALL.md`.
 
 ## Desenvolvimento sem Docker
 
-Com PHP 8.3+ e extensões do PhpSpreadsheet instaladas:
+Com PHP 8.3+, Composer 2 e as extensões listadas em `docs/REQUIREMENTS.md`:
 
 ```bash
 composer install
@@ -91,18 +87,118 @@ php scripts/create-admin.php --name="Admin" --email="admin@example.com"
 php -S 127.0.0.1:8080 -t public public/index.php
 ```
 
+## Stack
+
+- PHP 8.3+
+- PhpSpreadsheet
+- SQLite por padrão
+- MySQL opcional
+- HTML/CSS/JavaScript local, sem CDN
+- PHPUnit 11
+- Docker + Apache
+- AppFoundry para autenticação, sessão, CSRF, rate limit, auditoria, banco, router, CSP e bootstrap
+
+## Interface atual
+
+A aplicação já cobre:
+
+- login protegido;
+- upload de PPV `.xlsx`;
+- detecção semântica de `LINHA`, `MODELO`/`MOD`, `PROD.`, meses e dias produtivos;
+- resolução CT/OEE pelo catálogo técnico;
+- estados `MATCHED`, `AMBIGUOUS` e `UNRESOLVED`;
+- filtro/seleção por linha;
+- gráfico mensal em horas/dia;
+- referências de 1, 2 e 3 turnos;
+- seleção de período;
+- composição da carga por modelo;
+- cobertura da demanda calculada;
+- ranking/pico das linhas;
+- lista pesquisável de pendências técnicas.
+
+## Fórmula
+
+Com CT em segundos/peça e OEE decimal:
+
+```text
+horas_mes = demanda * CT / (3600 * OEE)
+horas_dia = horas_mes / dias_produtivos
+```
+
+A interface mantém separadas **demanda total** e **demanda calculada**, evitando apresentar uma leitura parcial como se tivesse 100% de cobertura técnica.
+
+## Contrato de leitura do PPV
+
+O leitor não deve depender de letras fixas como `AM`, `LT`, `LY` ou `LZ`.
+
+A importação procura semanticamente:
+
+- aba preferencial `PPV`;
+- `LINHA`;
+- `MODELO` ou `MOD`;
+- meses/períodos;
+- `PROD.`;
+- dias produtivos.
+
+Saída canônica:
+
+```text
+line      model      period      demand      productive_days
+THB 5.0   K62H       ABR         20200       20
+```
+
+Depois dessa transformação, nenhuma regra de cálculo deve depender da estrutura física do Excel.
+
+## Catálogo técnico
+
+O adaptador atual usa:
+
+```text
+data/technical-parameters.csv
+```
+
+O catálogo guarda CT/OEE e o estado de resolução técnica. Conflitos são preservados como `AMBIGUOUS`; modelos desconhecidos permanecem `UNRESOLVED`.
+
+O sistema **não escolhe parâmetros arbitrariamente** apenas para concluir um cálculo.
+
 ## CLI
 
-O motor continua utilizável sem interface:
+O motor também pode ser executado sem interface:
 
 ```bash
 php bin/analyze.php /caminho/para/ppv.xlsx
 ```
 
+## Validação antes de entregar mudanças
+
+```bash
+composer validate --strict
+composer lint
+composer test
+node --check public/assets/dashboard.js
+docker build -t indiyoin-local .
+```
+
 ## Segurança de dados
 
-Arquivos PPV não são versionados. Uploads ficam em `storage/imports/` e análises derivadas em `storage/analysis/`, ambos ignorados pelo Git.
+Não versionar:
 
-## Estado
+- `.env`;
+- PPVs reais;
+- `storage/app.sqlite`;
+- `storage/imports/`;
+- `storage/analysis/`;
+- senhas/tokens/credenciais.
 
-A interface é uma **v0.2 de validação**. O foco agora é validar o parsing contra PPVs reais e ampliar o catálogo técnico antes de adicionar edição de aliases, movimentação de modelos e persistência definitiva.
+Arquivos enviados ficam fora do web root.
+
+## Próxima frente
+
+A prioridade atual é transformar o catálogo técnico em uma funcionalidade administrável pela própria aplicação:
+
+1. tela de **Parâmetros Técnicos**;
+2. edição auditável de CT/OEE;
+3. resolução de `UNRESOLVED` e `AMBIGUOUS`;
+4. aliases validados;
+5. routing/identidade técnica quando `linha + modelo` não for suficiente;
+6. movimentação de modelos e cenários.

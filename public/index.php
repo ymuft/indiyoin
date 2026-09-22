@@ -2,27 +2,67 @@
 
 declare(strict_types=1);
 
-// Interface web propositalmente minima nesta primeira base.
-// O fluxo completo sera conectado ao mesmo caso de uso usado pelo CLI.
+use App\Core\ConfigValidator;
+use App\Core\Env;
+use App\Core\Router;
+use App\Security\SecurityHeaders;
+use Indiyoin\Application\AnalysisSummaryBuilder;
+use Indiyoin\Application\CapacityCalculator;
+use Indiyoin\Application\GenerateCapacityAnalysis;
+use Indiyoin\Infrastructure\Csv\CsvTechnicalCatalog;
+use Indiyoin\Infrastructure\Spreadsheet\PhpSpreadsheetPpvDemandReader;
+use Indiyoin\Web\Controllers\AuthController;
+use Indiyoin\Web\Controllers\DashboardController;
+use Indiyoin\Web\Controllers\HealthController;
+use Indiyoin\Web\Controllers\PpvImportController;
 
-?><!doctype html>
-<html lang="pt-BR">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Indiyoin</title>
-    <style>
-        body{font-family:system-ui,sans-serif;max-width:900px;margin:60px auto;padding:0 24px;background:#f6f7f9;color:#17191c}
-        main{background:#fff;border:1px solid #e3e5e8;border-radius:16px;padding:32px}
-        code{background:#f1f3f5;padding:2px 6px;border-radius:6px}
-    </style>
-</head>
-<body>
-<main>
-    <h1>Indiyoin</h1>
-    <p>Base inicial do motor PPV → demanda → CT/OEE → capacidade.</p>
-    <p>O primeiro fluxo executável está disponível via <code>php bin/analyze.php arquivo.xlsx</code>.</p>
-    <p>A próxima etapa desta tela será upload, validação do PPV e visualização por linha/modelo/mês.</p>
-</main>
-</body>
-</html>
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+$root = dirname(__DIR__);
+Env::load($root . '/.env');
+ConfigValidator::assertSafe();
+SecurityHeaders::apply();
+
+ini_set('session.use_strict_mode', '1');
+ini_set('session.use_only_cookies', '1');
+ini_set('session.use_trans_sid', '0');
+session_name(Env::get('APP_SESSION_NAME', 'indiyoin_session') ?? 'indiyoin_session');
+session_set_cookie_params([
+    'lifetime' => 0,
+    'path' => '/',
+    'secure' => Env::bool('APP_SECURE_COOKIES', false),
+    'httponly' => true,
+    'samesite' => 'Lax',
+]);
+session_start();
+
+$catalogPath = Env::get('TECHNICAL_CATALOG_PATH', $root . '/data/technical-parameters.csv') ?? $root . '/data/technical-parameters.csv';
+$sheetName = Env::get('PPV_SHEET_NAME', 'PPV') ?? 'PPV';
+$maxUploadMb = (int) (Env::get('MAX_UPLOAD_MB', '30') ?? '30');
+
+$analysisService = new GenerateCapacityAnalysis(
+    new PhpSpreadsheetPpvDemandReader($sheetName),
+    new CsvTechnicalCatalog($catalogPath),
+    new CapacityCalculator(),
+);
+
+$auth = new AuthController();
+$dashboard = new DashboardController($root . '/storage/analysis');
+$import = new PpvImportController(
+    $analysisService,
+    new AnalysisSummaryBuilder(),
+    $root . '/storage/imports',
+    $root . '/storage/analysis',
+    $maxUploadMb,
+);
+$health = new HealthController();
+
+$router = new Router();
+$router->get('/', [$dashboard, 'index']);
+$router->get('/login', [$auth, 'showLogin']);
+$router->post('/login', [$auth, 'login']);
+$router->post('/logout', [$auth, 'logout']);
+$router->post('/import', [$import, 'import']);
+$router->post('/analysis/clear', [$import, 'clear']);
+$router->get('/health', [$health, 'show']);
+$router->dispatch($_SERVER['REQUEST_METHOD'] ?? 'GET', $_SERVER['REQUEST_URI'] ?? '/');

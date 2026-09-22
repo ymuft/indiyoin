@@ -2,20 +2,27 @@
 
 ## Objetivo
 
-Transformar um PPV de demanda produtiva em uma leitura de capacidade por modelo, linha e mes, sem usar o PPV como fonte de parametros tecnicos.
+Transformar um PPV de demanda produtiva em uma leitura de capacidade por modelo, linha e mês, sem usar o PPV como fonte de parâmetros técnicos.
 
 ## Regra central
 
-**PPV informa demanda. Catalogo tecnico informa como fabricar. Motor calcula capacidade.**
+**PPV informa demanda. Catálogo técnico informa como fabricar. Motor calcula capacidade. AppFoundry protege e entrega a aplicação web.**
 
 ```text
+Browser
+   |
+   v
+AppFoundry foundation
+(auth / session / CSRF / audit / router / CSP)
+   |
+   v
 PPV.xlsx
    |
    v
 PpvStructureDetector
    |
    v
-PpvDemandReader -------> Demanda canonica
+PpvDemandReader -------> Demanda canônica
                               |
                               v
 CSV Technical Catalog -> Resolver Linha + Modelo
@@ -24,24 +31,43 @@ CSV Technical Catalog -> Resolver Linha + Modelo
                         CapacityCalculator
                               |
                               v
-                      Capacity Analysis
+                    AnalysisSummaryBuilder
+                              |
+                              v
+                         Dashboard
 ```
 
-## Entradas
+## Fronteiras
 
-### PPV
+### `src/AppFoundry/`
 
-Dados que devem ser extraidos semanticamente, nunca por coordenadas fixas:
+Infraestrutura web reaproveitada do projeto AppFoundry. Não deve conhecer conceitos como PPV, CT, OEE ou capacidade.
+
+### `src/Domain` + `src/Application`
+
+Regras do Indiyoin. Não devem depender de sessão, HTML, banco ou rota HTTP.
+
+### `src/Infrastructure`
+
+Adaptadores de entrada: planilha XLSX e catálogo CSV.
+
+### `src/Web`
+
+Controladores e view renderer que ligam a fundação AppFoundry ao núcleo do Indiyoin.
+
+## Entradas do PPV
+
+Dados extraídos semanticamente, nunca por coordenadas fixas:
 
 - LINHA
 - MODELO/MOD
 - meses
 - PROD. (demanda produtiva)
-- dias produtivos de cada mes
+- dias produtivos de cada mês
 
-### Catalogo tecnico CSV
+Nos dois PPVs reais analisados, o padrão mensal é `MÊS | número de dias | DIAS` e o `PROD.` fica na primeira coluna do trio. O detector procura semanticamente essa relação em vez de fixar AM/AN/AO etc.
 
-Primeiro catalogo veio do mapeamento parcial do PPV historico:
+## Catálogo técnico CSV
 
 - line
 - model
@@ -50,37 +76,23 @@ Primeiro catalogo veio do mapeamento parcial do PPV historico:
 - mapping_status
 - source_row
 
-O CSV atual e uma fonte inicial, nao a arquitetura final do catalogo.
+O CSV é uma fonte inicial, não a arquitetura final do catálogo.
 
-## Estados de resolucao
+## Estados de resolução
 
-- `MATCHED`: existe um unico conjunto CT/OEE seguro para Linha + Modelo.
-- `AMBIGUOUS`: existem variantes tecnicas e o sistema nao escolhe sozinho.
-- `UNRESOLVED`: o catalogo ainda nao conhece a combinacao.
+- `MATCHED`: existe um único conjunto CT/OEE seguro para Linha + Modelo.
+- `AMBIGUOUS`: existem variantes técnicas e o sistema não escolhe sozinho.
+- `UNRESOLVED`: o catálogo ainda não conhece a combinação.
 
-Nenhum valor tecnico deve ser inventado para permitir que o calculo continue.
+Nenhum valor técnico é inventado para permitir que o cálculo continue.
 
-## Formula
+## Fórmula
 
 ```text
 required_hours_month = demand * CT_seconds / (3600 * OEE)
 required_hours_day   = required_hours_month / productive_days
 ```
 
-## Limites intencionais da v0.1
+## Segurança e arquivos
 
-- Sem alias automatico de modelos.
-- Sem escolha automatica em conflitos como K31A/K2KF.
-- Sem banco de dados.
-- Sem dashboard final.
-- Detector de estrutura do PPV e heuristico e deve ganhar testes com PPVs reais antes de ser considerado estavel.
-
-## Evolucao planejada
-
-1. Validar detector contra PPVs de layouts diferentes.
-2. Criar camada de identidade/aliases.
-3. Persistir catalogo tecnico versionado.
-4. Adicionar relatorio de importacao (matched/ambiguous/unresolved).
-5. Agregar capacidade por linha e mes.
-6. Dashboard ECharts com composicao por modelo e referencias de turnos.
-7. Exportar o nucleo para o Capacity quando o fluxo estiver validado.
+PPVs ficam em `storage/imports/`, fora do web root e fora do Git. O resumo derivado fica em `storage/analysis/`. A interface usa apenas assets locais para permanecer compatível com a CSP restritiva do AppFoundry.

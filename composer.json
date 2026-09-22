@@ -5,6 +5,7 @@
   "license": "proprietary",
   "require": {
     "php": "^8.3",
+    "ext-pdo": "*",
     "phpoffice/phpspreadsheet": "^3.0"
   },
   "require-dev": {
@@ -12,7 +13,8 @@
   },
   "autoload": {
     "psr-4": {
-      "Indiyoin\\": "src/"
+      "Indiyoin\\": "src/",
+      "App\\": "src/AppFoundry/"
     }
   },
   "autoload-dev": {
@@ -22,7 +24,7 @@
   },
   "scripts": {
     "test": "phpunit",
-    "lint": "find src tests public bin -name '*.php' -print0 | xargs -0 -n1 php -l"
+    "lint": "find src tests public bin scripts -name '*.php' -print0 | xargs -0 -n1 php -l"
   },
   "config": {
     "sort-packages": true

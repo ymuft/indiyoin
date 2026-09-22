@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_sqlite, mbstring, zip, gd, dom, simplexml, xml, xmlreader, xmlwriter
+          coverage: none
+
+      - run: composer validate --strict
+      - run: composer install --no-interaction --prefer-dist
+      - run: composer lint
+      - run: composer test
+
+      - name: AppFoundry integration smoke test
+        shell: bash
+        run: |
+          cp .env.example .env
+          echo "APP_ENV=testing" >> .env
+          echo "DB_DATABASE=${RUNNER_TEMP}/indiyoin.sqlite" >> .env
+          php scripts/migrate.php
+          php scripts/create-admin.php --name="CI Admin" --email="ci@example.com" --password="capacity-test-123"
+
+          php -S 127.0.0.1:8080 -t public public/index.php >"${RUNNER_TEMP}/indiyoin-server.log" 2>&1 &
+          SERVER_PID=$!
+          trap 'kill ${SERVER_PID}' EXIT
+          sleep 2
+
+          curl -fsS http://127.0.0.1:8080/health | grep '"status":"ok"'
+          curl -fsS -c "${RUNNER_TEMP}/cookies.txt" http://127.0.0.1:8080/login > "${RUNNER_TEMP}/login.html"
+          CSRF=$(grep -oP 'name="_csrf" value="\K[^"]+' "${RUNNER_TEMP}/login.html" | head -1)
+          test -n "$CSRF"
+
+          STATUS=$(curl -sS -o /dev/null -w '%{http_code}' -b "${RUNNER_TEMP}/cookies.txt" -c "${RUNNER_TEMP}/cookies.txt" \
+            -X POST http://127.0.0.1:8080/login \
+            --data-urlencode "_csrf=${CSRF}" \
+            --data-urlencode "email=ci@example.com" \
+            --data-urlencode "password=capacity-test-123")
+          test "$STATUS" = "302"
+
+          curl -fsS -b "${RUNNER_TEMP}/cookies.txt" http://127.0.0.1:8080/ | grep -q 'Importar PPV'

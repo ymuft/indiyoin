@@ -1,0 +1,11 @@
+.git
+.github
+.env
+vendor
+storage/*
+!storage/imports/.gitkeep
+!storage/analysis/.gitkeep
+*.xlsx
+*.xls
+*.xlsm
+*.log

@@ -49,7 +49,6 @@ final class PpvStructureDetector
     {
         $periods = [];
 
-        // Primeira estrategia: localizar subcabecalhos PROD. e procurar o nome do mes/dias nas linhas acima.
         for ($row = max(1, $baseHeaderRow - 8); $row <= $baseHeaderRow + 8; $row++) {
             for ($column = 1; $column <= $highestColumn; $column++) {
                 $value = Normalizer::key((string) $sheet->getCell([$column, $row])->getCalculatedValue());
@@ -96,9 +95,20 @@ final class PpvStructureDetector
 
     private function findProductiveDaysAbove(Worksheet $sheet, int $column, int $row): ?int
     {
+        // Nos PPVs reais, o cabecalho costuma ser: MES | N | DIAS, enquanto PROD.
+        // fica na primeira coluna do trio. Procuramos primeiro nas colunas adjacentes
+        // e depois na propria coluna para nao depender de coordenadas fixas.
         for ($r = $row - 1; $r >= max(1, $row - 8); $r--) {
-            $value = $sheet->getCell([$column, $r])->getCalculatedValue();
-            if (is_numeric($value)) {
+            foreach ([$column + 1, $column, $column - 1, $column + 2] as $candidateColumn) {
+                if ($candidateColumn < 1) {
+                    continue;
+                }
+
+                $value = $sheet->getCell([$candidateColumn, $r])->getCalculatedValue();
+                if (!is_numeric($value)) {
+                    continue;
+                }
+
                 $days = (int) $value;
                 if ($days >= 1 && $days <= 31) {
                     return $days;

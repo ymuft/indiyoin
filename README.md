@@ -4,6 +4,14 @@ Motor independente para transformar **demanda produtiva do PPV** em **necessidad
 
 > **PPV informa demanda. Catálogo técnico informa como fabricar. O motor calcula capacidade.**
 
+## Projeto standalone
+
+O **Indiyoin é um projeto independente** e deve ser desenvolvido no próprio repositório `ymuft/indiyoin`.
+
+Ele não encaminha automaticamente trabalho para Capacity Planning ou qualquer outro repositório. Quando a documentação ou o código usam os termos `capacity`, `CapacityCalculator`, `capacity engine` ou "capacidade", eles se referem ao **domínio de cálculo do próprio Indiyoin**.
+
+Outro projeto só deve ser consultado, comparado ou alterado quando isso for pedido explicitamente pelo usuário.
+
 ## Fluxo
 
 ```text
@@ -17,7 +25,7 @@ catálogo técnico CT/OEE
    ↓
 resolução MATCHED / AMBIGUOUS / UNRESOLVED
    ↓
-capacity engine
+motor de cálculo do Indiyoin
    ↓
 horas/mês + horas/dia
    ↓
@@ -26,16 +34,14 @@ dashboard
 
 ## Para Codex / agentes de código
 
-Leia **`AGENTS.md` antes de alterar o projeto**.
+Leia **`AGENTS.md` antes de alterar o projeto** e use `CODEX.md` como entrada rápida.
 
-Ele contém:
+Eles definem explicitamente que:
 
-- regras de domínio que não podem ser quebradas;
-- fronteiras arquiteturais;
-- comandos de instalação e validação;
-- critérios de pronto;
-- regras de segurança de Git/dados;
-- prioridade funcional atual.
+- o repositório alvo é `ymuft/indiyoin`;
+- tarefas do Indiyoin não devem ser encaminhadas para outro projeto;
+- regras de domínio e fronteiras arquiteturais devem ser preservadas;
+- instalação e validação devem seguir os comandos documentados.
 
 Depois consulte:
 

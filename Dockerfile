@@ -10,7 +10,7 @@ RUN apt-get update \
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 COPY composer.json ./
-RUN composer install --no-dev --no-interaction --no-progress --optimize-autoloader
+RUN composer install --no-dev --no-interaction --no-progress --no-autoloader
 COPY . .
 RUN composer dump-autoload --no-dev --optimize \
     && mkdir -p storage/imports storage/analysis \
